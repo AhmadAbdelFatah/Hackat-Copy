@@ -1,8 +1,8 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Shield, Users, FileText, DollarSign, AlertTriangle, Plus, Edit, Trash2, Copy } from "lucide-react"
+import { AdminLayout } from "@/components/admin/admin-layout"
+import { Shield, Plus, Edit, Trash2, Copy, DollarSign, Users, FileText } from "lucide-react"
 
 const policyTemplates = [
   {
@@ -57,228 +57,158 @@ const policyTemplates = [
 
 export default function PoliciesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">RainSure</h1>
-                <p className="text-xs text-gray-600">Admin Dashboard</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                <Shield className="w-3 h-3 mr-1" />
-                Admin Access
-              </Badge>
-              <Button variant="outline" size="sm">
-                Logout
-              </Button>
-            </div>
+    <AdminLayout>
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Policy Templates</h1>
+            <p className="text-gray-600">Create and manage insurance policy templates</p>
           </div>
+          <Button className="bg-emerald-600 hover:bg-emerald-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Policy
+          </Button>
         </div>
-      </header>
+      </div>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white/80 backdrop-blur-sm border-r min-h-screen">
-          <nav className="p-4 space-y-2">
-            <Link
-              href="/admin"
-              className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <Users className="w-5 h-5" />
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              href="/admin/subscriptions"
-              className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Subscriptions</span>
-            </Link>
-            <Link
-              href="/admin/policies"
-              className="flex items-center space-x-3 px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg"
-            >
-              <Shield className="w-5 h-5" />
-              <span className="font-medium">Policy Templates</span>
-            </Link>
-            <Link
-              href="/admin/payouts"
-              className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <DollarSign className="w-5 h-5" />
-              <span>Payout History</span>
-            </Link>
-            <Link
-              href="/admin/system"
-              className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <AlertTriangle className="w-5 h-5" />
-              <span>System Status</span>
-            </Link>
-          </nav>
-        </aside>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Active Policies</p>
+                <p className="text-2xl font-bold text-gray-900">3</p>
+              </div>
+              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <Shield className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Main Content */}
-        <main className="flex-1 p-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Draft Policies</p>
+                <p className="text-2xl font-bold text-gray-900">1</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Subscribers</p>
+                <p className="text-2xl font-bold text-gray-900">312</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Avg Premium</p>
+                <p className="text-2xl font-bold text-gray-900">$10.13</p>
+              </div>
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-teal-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Policy Templates */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {policyTemplates.map((policy) => (
+          <Card key={policy.id} className="border-0 shadow-lg">
+            <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Policy Templates</h1>
-                  <p className="text-gray-600">Create and manage insurance policy templates</p>
+                  <CardTitle className="text-xl text-gray-900">{policy.name}</CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">{policy.description}</p>
                 </div>
-                <Button className="bg-emerald-600 hover:bg-emerald-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Policy
-                </Button>
+                <Badge
+                  variant="outline"
+                  className={
+                    policy.status === "active"
+                      ? "text-emerald-600 border-emerald-200 bg-emerald-50"
+                      : "text-orange-600 border-orange-200 bg-orange-50"
+                  }
+                >
+                  {policy.status.charAt(0).toUpperCase() + policy.status.slice(1)}
+                </Badge>
               </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Active Policies</p>
-                      <p className="text-2xl font-bold text-gray-900">3</p>
-                    </div>
-                    <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-emerald-600" />
-                    </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Coverage:</span>
+                    <p className="font-medium">{policy.coverage}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Draft Policies</p>
-                      <p className="text-2xl font-bold text-gray-900">1</p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-blue-600" />
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Base Premium:</span>
+                    <p className="font-medium text-emerald-600">{policy.basePremium}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Subscribers</p>
-                      <p className="text-2xl font-bold text-gray-900">312</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Users className="w-6 h-6 text-purple-600" />
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Max Payout:</span>
+                    <p className="font-medium text-blue-600">{policy.maxPayout}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Avg Premium</p>
-                      <p className="text-2xl font-bold text-gray-900">$10.13</p>
-                    </div>
-                    <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-6 h-6 text-teal-600" />
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Subscribers:</span>
+                    <p className="font-medium">{policy.farmerCount} farmers</p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
 
-            {/* Policy Templates */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {policyTemplates.map((policy) => (
-                <Card key={policy.id} className="border-0 shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-xl text-gray-900">{policy.name}</CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">{policy.description}</p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={
-                          policy.status === "active"
-                            ? "text-emerald-600 border-emerald-200 bg-emerald-50"
-                            : "text-orange-600 border-orange-200 bg-orange-50"
-                        }
-                      >
-                        {policy.status.charAt(0).toUpperCase() + policy.status.slice(1)}
+                <div>
+                  <span className="text-gray-600 text-sm">Triggers:</span>
+                  <div className="mt-1 space-y-1">
+                    {policy.triggers.map((trigger, index) => (
+                      <Badge key={index} variant="secondary" className="mr-2 mb-1">
+                        {trigger}
                       </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Coverage:</span>
-                          <p className="font-medium">{policy.coverage}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Base Premium:</span>
-                          <p className="font-medium text-emerald-600">{policy.basePremium}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Max Payout:</span>
-                          <p className="font-medium text-blue-600">{policy.maxPayout}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Subscribers:</span>
-                          <p className="font-medium">{policy.farmerCount} farmers</p>
-                        </div>
-                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                      <div>
-                        <span className="text-gray-600 text-sm">Triggers:</span>
-                        <div className="mt-1 space-y-1">
-                          {policy.triggers.map((trigger, index) => (
-                            <Badge key={index} variant="secondary" className="mr-2 mb-1">
-                              {trigger}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t">
-                        <span className="text-xs text-gray-500">Created {policy.createdDate}</span>
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
-                            <Copy className="w-4 h-4 mr-1" />
-                            Duplicate
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </main>
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <span className="text-xs text-gray-500">Created {policy.createdDate}</span>
+                  <div className="flex space-x-2">
+                    <Button size="sm" variant="outline">
+                      <Copy className="w-4 h-4 mr-1" />
+                      Duplicate
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50 bg-transparent"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-    </div>
+    </AdminLayout>
   )
 }
