@@ -6,9 +6,9 @@ pragma solidity ^0.8.20;
 /// @notice Manages seasonal crop insurance policies with full-season and partial coverage.
 
 interface ITreasury {
-/// @notice Function to deposit funds from a farmer to the treasury
-/// @param farmer Address of the subscribing farmer
-function deposit(address farmer) external payable;
+    /// @notice Function to deposit funds from a farmer to the treasury
+    /// @param farmer Address of the subscribing farmer
+    function deposit(address farmer) external payable;
 }
 
 contract PolicyManager {
@@ -31,6 +31,12 @@ contract PolicyManager {
         mapping(address => uint256) lastSubscribedSeason;  // Records last season each address subscribed
     }
 
+    /// @notice Struct to store subscription details
+    struct Subscription {
+        uint256 policyId;                         // ID of the subscribed policy
+        uint256 timestamp;                        // Time of subscription
+    }
+
     address public owner;                          // Contract owner (deployer)
     address public treasury;                       // Address of Treasury contract
     address public payoutEngine;                   // Address of PayoutEngine contract
@@ -38,8 +44,9 @@ contract PolicyManager {
     uint256 public nextPolicyId = 1;               // Counter for unique policy IDs
 
     mapping(uint256 => Policy) private policies;   // Mapping of policyId to Policy data
-    mapping(address => uint256[]) public farmerPolicies; // Tracks policies each farmer subscribed to
-    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover; // Prevents overlapping full-season coverage
+    mapping(address => mapping(uint256 => Subscription[])) public farmerPolicies; // farmer => season => list of subscriptions
+    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover;    // Prevents overlapping full-season coverage
+    mapping(uint256 => mapping(uint256 => address[])) public historicalSubscribers; // policyId => season => subscribers
 
     /// @notice Emitted when a new policy is created
     event PolicyCreated(uint256 indexed id, string name, uint256 season);
@@ -52,6 +59,9 @@ contract PolicyManager {
 
     /// @notice Emitted when a policy status is changed (paused, resumed, payout)
     event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
+
+    /// @notice Emitted when a season is reset for a policy
+    event SeasonReset(uint256 indexed policyId, uint256 newSeason);
 
     /// @notice Restricts function access to the owner
     modifier onlyOwner() {
@@ -138,7 +148,10 @@ contract PolicyManager {
 
         p.lastSubscribedSeason[msg.sender] = p.season;
         p.currentSubscribers.push(msg.sender);
-        farmerPolicies[msg.sender].push(_policyId);
+        farmerPolicies[msg.sender][p.season].push(Subscription({
+            policyId: _policyId,
+            timestamp: block.timestamp
+        })); 
 
         ITreasury(treasury).deposit{value: msg.value}(msg.sender);
 
@@ -169,20 +182,24 @@ contract PolicyManager {
         emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
     }
 
-    /// @notice Resets a policy for the new season
+    /// @notice Resets the state of a policy for a new season
     /// @param _policyId ID of the policy to reset
-    function resetPolicyForNewSeason(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
+    function resetSeasonState(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
         Policy storage p = policies[_policyId];
         require(
             p.status == PolicyStatus.PayoutTriggered || p.status == PolicyStatus.Paused,
             "Policy must be completed or paused"
         );
 
+        // تخزين المشتركين الحاليين قبل المسح
+        historicalSubscribers[_policyId][p.season] = p.currentSubscribers;
+
         delete p.currentSubscribers;
+        p.lastSubscribedSeason[msg.sender] = p.season;
         p.season += 1;
         p.status = PolicyStatus.Active;
 
-        emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
+        emit SeasonReset(_policyId, p.season);
     }
 
     /// @notice Returns details of a given policy
@@ -229,13 +246,20 @@ contract PolicyManager {
         );
     }
 
-    /// @notice Returns all policy IDs a farmer is subscribed to
+    /// @notice Returns subscription details for a farmer in a specific season
     /// @param _farmer Address of the farmer
-    function getFarmerPolicies(address _farmer) external view returns (uint256[] memory) {
-        return farmerPolicies[_farmer];
+    /// @param _season Season index to query
+    function getFarmerPolicies(address _farmer, uint256 _season) external view returns (Subscription[] memory) {
+        return farmerPolicies[_farmer][_season];
+    }
+
+    /// @notice Returns historical subscribers for a specific policy and season
+    /// @param _policyId ID of the policy
+    /// @param _season Season index to query
+    function getHistoricalSubscribers(uint256 _policyId, uint256 _season) external view returns (address[] memory) {
+        return historicalSubscribers[_policyId][_season];
     }
 
     /// @notice Fallback function to receive plain ETH transfers
     receive() external payable {}
-    
 }
