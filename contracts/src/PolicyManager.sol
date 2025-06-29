@@ -175,6 +175,22 @@ contract PolicyManager {
         emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
     }
 
+    /// @notice Resets a policy for the new season
+    /// @param _policyId ID of the policy to reset
+    function resetPolicyForNewSeason(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
+        Policy storage p = policies[_policyId];
+        require(
+            p.status == PolicyStatus.PayoutTriggered || p.status == PolicyStatus.Paused,
+            "Policy must be completed or paused"
+        );
+
+        delete p.currentSubscribers;
+        p.season += 1;
+        p.status = PolicyStatus.Active;
+
+        emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
+    }
+
     /// @notice Returns the details of a policy.
     /// @param _policyId The ID of the policy to query.
     /// @return threshold The trigger threshold
