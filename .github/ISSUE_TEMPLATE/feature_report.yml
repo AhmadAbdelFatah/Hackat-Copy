@@ -1,0 +1,34 @@
+name: 💡 Feature Request
+description: Suggest an idea for this project
+title: "✨ Feature: "
+labels: [enhancement, help wanted]
+assignees:
+  - Youssefahmed88
+  - MSTFA77
+  - YousefMedhat56
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Description of the Idea
+      description: Provide a clear and concise description of the feature you’d like to see.
+      placeholder: |
+        e.g., Add a dark mode toggle for better night-time usability.
+      render: markdown
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: 🎯 Why is this Idea Beneficial?
+      description: Why do you think this feature is useful or important?
+      placeholder: |
+        e.g., Improves user experience during night use and reduces eye strain.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 🗒️ Additional Details
+      description: Include any extra ideas, use cases, or context for this request.
+      placeholder: |
+        e.g., Similar apps like XYZ already have this feature implemented.

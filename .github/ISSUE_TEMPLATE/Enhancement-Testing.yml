@@ -1,0 +1,54 @@
+name: 🛠️ Enhancement / Testing
+description: Suggest an improvement or testing for a specific part of the code
+title: "⚙️ Issue: Enhancement/Testing: "
+labels: [enhancement, testing]
+assignees:
+  - Youssefahmed88
+  - MSTFA77
+  - YousefMedhat56
+
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 Description
+      description: Please provide a clear description of the improvement or test needed.
+      placeholder: |
+        e.g., Improve the validation logic in the user login form.
+      render: markdown
+
+  - type: textarea
+    id: targeted-code
+    attributes:
+      label: 📍 Targeted Code Area
+      description: Specify the file/module/function or the exact part of the code this issue concerns.
+      placeholder: |
+        e.g., File: /src/auth/login.js — Function: validateInput()
+
+  - type: textarea
+    id: code-snippet
+    attributes:
+      label: 💻 Code Snippet (if applicable)
+      description: Include a code snippet that needs improvement or is related to the testing.
+      placeholder: |
+        ```solidity
+        function example() public view returns (uint) {
+            return someValue;
+        }
+        ```
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 🎯 Expected Behavior
+      description: Describe what you expect after this enhancement or test is implemented.
+      placeholder: |
+        e.g., The validation should block empty emails and weak passwords.
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: 🗒️ Additional Notes
+      description: Any other details, context, or references related to this task.
+      placeholder: |
+        e.g., Related to issue #12 or based on recent QA feedback.

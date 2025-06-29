@@ -1,0 +1,48 @@
+name: 🐞 Bug Report
+description: Report a bug to help us improve
+title: "🐞 Bug: "
+labels: [bug, help wanted]
+assignees:
+  - Youssefahmed88
+  - MSTFA77
+  - YousefMedhat56
+
+body:
+  - type: input
+    id: description
+    attributes:
+      label: 📝 Description of the Problem
+      description: Provide a clear and concise description of the issue.
+      placeholder: "e.g., When I click the 'Save' button, the app crashes."
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔁 Steps to Reproduce
+      description: Describe the steps to reproduce the problem.
+      placeholder: |
+        1. Go to the homepage
+        2. Click on 'Save'
+        3. Observe the crash
+      render: markdown
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: Describe what you expected to happen.
+      placeholder: "The page should save the data without error."
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: Describe what actually happened.
+      placeholder: "The app crashes with error 500."
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 🗒️ Additional Details
+      description: Include any additional information, such as logs, screenshots, or related code snippets.
+      placeholder: "Add screenshots, logs, or error messages here."
