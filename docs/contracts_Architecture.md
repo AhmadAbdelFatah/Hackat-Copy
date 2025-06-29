@@ -1,6 +1,4 @@
-# 🌾 Decentralized Weather-based Crop Insurance System
-
-## 📌 Overview
+# 🏗️ System Architecture
 
 This document provides a professional, modular, and extensible **System Design Specification** for a decentralized crop insurance platform. The system targets small-scale farmers in regions like **Malawi**, offering seasonal insurance against climate-related events like droughts or heavy rainfall.
 
