@@ -53,26 +53,26 @@ contract PolicyManager {
     /// @notice Prevents overlapping full-season coverage
     mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover;
 
-    /// @notice Emitted when a new policy is created.
-    event PolicyCreated(uint256 indexed id, uint256 threshold, uint256 premium);
+    /// @notice Emitted when a new policy is created
+    event PolicyCreated(uint256 indexed id, string name, uint256 season);
 
-    /// @notice Emitted when a farmer subscribes to a policy.
+    /// @notice Emitted when a farmer subscribes to a policy
     event Subscribed(address indexed farmer, uint256 indexed policyId, uint256 season);
 
-    /// @notice Emitted when payout is triggered for a policy.
+    /// @notice Emitted when payout is triggered for a policy
     event PayoutTriggered(uint256 indexed policyId);
 
-    /// @notice Emitted when a policy status is changed (paused, resumed, payout).
+    /// @notice Emitted when a policy status is changed (paused, resumed, payout)
     event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
 
-    /// @notice Restricts function access to the contract owner.
+    /// @notice Restricts function access to the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this");
         _;
     }
 
-    /// @notice Ensures the policy with the given ID exists.
-    /// @param _id The ID of the policy to validate.
+    /// @notice Ensures the policy with the given ID exists
+    /// @param _id The ID of the policy to validate
     modifier validPolicy(uint256 _id) {
         require(policies[_id].id != 0, "Policy does not exist");
         _;
@@ -84,7 +84,7 @@ contract PolicyManager {
         _;
     }
 
-    /// @notice Initializes the contract and sets the deployer as the owner and treasury.
+    /// @notice Initializes the contract and sets the deployer as the owner and treasury
     constructor(address _treasury) {
         owner = msg.sender;
         treasury = _treasury;
@@ -96,17 +96,38 @@ contract PolicyManager {
         payoutEngine = _payoutEngine;
     }
 
-    /// @notice Creates a new policy with given threshold and premium.
-    /// @param _threshold The trigger threshold for the policy.
-    /// @param _premium The premium amount required to subscribe.
-    function createPolicy(uint256 _threshold, uint256 _premium) external onlyOwner {
+    /// @notice Creates a new insurance policy
+    /// @param _name Name of the policy
+    /// @param _threshold Payout threshold
+    /// @param _premium Premium required to subscribe
+    /// @param _season Season index
+    /// @param _seasonStart Start timestamp of the season
+    /// @param _seasonEnd End timestamp of the season
+    /// @param _subscriptionDeadline Last timestamp to allow subscriptions
+    /// @param _coversFullSeason Indicates whether full-season is covered
+    function createPolicy(
+        string memory _name,
+        uint256 _threshold,
+        uint256 _premium,
+        uint256 _season,
+        uint256 _seasonStart,
+        uint256 _seasonEnd,
+        uint256 _subscriptionDeadline,
+        bool _coversFullSeason
+    ) external onlyOwner {
         Policy storage p = policies[nextPolicyId];
         p.id = nextPolicyId;
+        p.name = _name;
         p.triggerThreshold = _threshold;
         p.premium = _premium;
+        p.season = _season;
+        p.seasonStart = _seasonStart;
+        p.seasonEnd = _seasonEnd;
+        p.subscriptionDeadline = _subscriptionDeadline;
+        p.coversFullSeason = _coversFullSeason;
         p.status = PolicyStatus.Active;
 
-        emit PolicyCreated(nextPolicyId, _threshold, _premium);
+        emit PolicyCreated(nextPolicyId, _name, _season);
         nextPolicyId++;
     }
 
@@ -191,17 +212,54 @@ contract PolicyManager {
         emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
     }
 
-    /// @notice Returns the details of a policy.
-    /// @param _policyId The ID of the policy to query.
-    /// @return threshold The trigger threshold
-    /// @return premium The premium amount
-    /// @return status The current status of the policy
-    /// @return subscriberCount Number of subscribers
-    function getPolicyDetails(uint256 _policyId) external view validPolicy(_policyId)
-        returns (uint256 threshold, uint256 premium, PolicyStatus status, uint256 subscriberCount)
+    /// @notice Returns details of a given policy
+    /// @param _policyId ID of the policy to query
+    /// @return name Name of the policy
+    /// @return threshold Threshold to trigger payout
+    /// @return premium Premium required
+    /// @return status Current policy status
+    /// @return season Season ID
+    /// @return seasonStart Season start timestamp
+    /// @return seasonEnd Season end timestamp
+    /// @return subscriptionDeadline Deadline to subscribe
+    /// @return coversFullSeason Whether policy covers full season
+    /// @return subscriberCount Number of current subscribers
+    function getPolicyDetails(uint256 _policyId)
+        external
+        view
+        validPolicy(_policyId)
+        returns (
+            string memory name,
+            uint256 threshold,
+            uint256 premium,
+            PolicyStatus status,
+            uint256 season,
+            uint256 seasonStart,
+            uint256 seasonEnd,
+            uint256 subscriptionDeadline,
+            bool coversFullSeason,
+            uint256 subscriberCount
+        )
     {
         Policy storage p = policies[_policyId];
-        return (p.triggerThreshold, p.premium, p.status, p.currentSubscribers.length);
+        return (
+            p.name,
+            p.triggerThreshold,
+            p.premium,
+            p.status,
+            p.season,
+            p.seasonStart,
+            p.seasonEnd,
+            p.subscriptionDeadline,
+            p.coversFullSeason,
+            p.currentSubscribers.length
+        );
+    }
+
+    /// @notice Returns all policy IDs a farmer is subscribed to
+    /// @param _farmer Address of the farmer
+    function getFarmerPolicies(address _farmer) external view returns (uint256[] memory) {
+        return farmerPolicies[_farmer];
     }
 
     /// @notice Allows the contract to receive Ether from farmers or the owner.
