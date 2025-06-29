@@ -2,14 +2,13 @@
 pragma solidity ^0.8.20;
 
 /// @title PolicyManager
-/// @author Mostafa
-/// @notice Manages insurance policies, allowing farmers to subscribe and receive payouts.
-/// @dev This contract assumes equal payout distribution and is intended for demonstration.
+/// @author Youssef
+/// @notice Manages seasonal crop insurance policies with full-season and partial coverage.
 
 interface ITreasury {
-    /// @notice Function to deposit funds from a farmer to the treasury
-    /// @param farmer Address of the subscribing farmer
-    function deposit(address farmer) external payable;
+/// @notice Function to deposit funds from a farmer to the treasury
+/// @param farmer Address of the subscribing farmer
+function deposit(address farmer) external payable;
 }
 
 contract PolicyManager {
@@ -32,26 +31,15 @@ contract PolicyManager {
         mapping(address => uint256) lastSubscribedSeason;  // Records last season each address subscribed
     }
 
-    /// @notice Contract owner (initial deployer).
-    address public owner;
+    address public owner;                          // Contract owner (deployer)
+    address public treasury;                       // Address of Treasury contract
+    address public payoutEngine;                   // Address of PayoutEngine contract
 
-    /// @notice Address of Treasury contract
-    address public treasury;
+    uint256 public nextPolicyId = 1;               // Counter for unique policy IDs
 
-    /// @notice Address of PayoutEngine contract
-    address public payoutEngine;
-
-    /// @notice Tracks the next policy ID to be assigned.
-    uint256 public nextPolicyId = 1;
-
-    /// @notice Maps policy ID to policy data.
-    mapping(uint256 => Policy) public policies;
-
-    /// @notice Maps farmer address to list of policy IDs they subscribed to.
-    mapping(address => uint256[]) public farmerPolicies;
-
-    /// @notice Prevents overlapping full-season coverage
-    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover;
+    mapping(uint256 => Policy) private policies;   // Mapping of policyId to Policy data
+    mapping(address => uint256[]) public farmerPolicies; // Tracks policies each farmer subscribed to
+    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover; // Prevents overlapping full-season coverage
 
     /// @notice Emitted when a new policy is created
     event PolicyCreated(uint256 indexed id, string name, uint256 season);
@@ -59,22 +47,21 @@ contract PolicyManager {
     /// @notice Emitted when a farmer subscribes to a policy
     event Subscribed(address indexed farmer, uint256 indexed policyId, uint256 season);
 
-    /// @notice Emitted when payout is triggered for a policy
+    /// @notice Emitted when a payout is triggered for a policy
     event PayoutTriggered(uint256 indexed policyId);
 
     /// @notice Emitted when a policy status is changed (paused, resumed, payout)
     event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
 
-    /// @notice Restricts function access to the contract owner
+    /// @notice Restricts function access to the owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this");
         _;
     }
 
-    /// @notice Ensures the policy with the given ID exists
-    /// @param _id The ID of the policy to validate
+    /// @notice Validates that a given policy exists
     modifier validPolicy(uint256 _id) {
-        require(policies[_id].id != 0, "Policy does not exist");
+        require(_id > 0 && _id < nextPolicyId, "Policy does not exist");
         _;
     }
 
@@ -84,7 +71,8 @@ contract PolicyManager {
         _;
     }
 
-    /// @notice Initializes the contract and sets the deployer as the owner and treasury
+    /// @notice Contract constructor sets initial treasury address
+    /// @param _treasury Address of the treasury contract
     constructor(address _treasury) {
         owner = msg.sender;
         treasury = _treasury;
@@ -167,30 +155,15 @@ contract PolicyManager {
         emit PayoutTriggered(_policyId);
     }
 
-    /// @notice Triggers payout for a policy and distributes available balance equally among subscribers.
-    /// @param _policyId The ID of the policy for which payout is being triggered.
-    function triggerPayout(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
-        Policy storage p = policies[_policyId];
-        require(p.status == PolicyStatus.Active, "Policy not active");
-
-        uint256 payoutAmount = address(this).balance / p.currentSubscribers.length;
-        for (uint i = 0; i < p.currentSubscribers.length; i++) {
-            payable(p.currentSubscribers[i]).transfer(payoutAmount);
-        }
-
-        p.status = PolicyStatus.PayoutTriggered;
-        emit PayoutTriggered(_policyId);
-    }
-
-    /// @notice Pauses a policy, preventing further subscriptions.
-    /// @param _policyId The ID of the policy to pause.
+    /// @notice Pauses an active policy
+    /// @param _policyId ID of the policy to pause
     function pausePolicy(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
         policies[_policyId].status = PolicyStatus.Paused;
         emit PolicyStatusChanged(_policyId, PolicyStatus.Paused);
     }
 
-    /// @notice Resumes a paused policy.
-    /// @param _policyId The ID of the policy to resume.
+    /// @notice Resumes a paused policy
+    /// @param _policyId ID of the policy to resume
     function resumePolicy(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
         policies[_policyId].status = PolicyStatus.Active;
         emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
@@ -262,6 +235,7 @@ contract PolicyManager {
         return farmerPolicies[_farmer];
     }
 
-    /// @notice Allows the contract to receive Ether from farmers or the owner.
+    /// @notice Fallback function to receive plain ETH transfers
     receive() external payable {}
+    
 }
