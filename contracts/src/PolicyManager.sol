@@ -50,16 +50,19 @@ contract PolicyManager {
     /// @notice Maps farmer address to list of policy IDs they subscribed to.
     mapping(address => uint256[]) public farmerPolicies;
 
+    /// @notice Prevents overlapping full-season coverage
+    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover;
+
     /// @notice Emitted when a new policy is created.
     event PolicyCreated(uint256 indexed id, uint256 threshold, uint256 premium);
 
     /// @notice Emitted when a farmer subscribes to a policy.
-    event Subscribed(address indexed farmer, uint256 indexed policyId);
+    event Subscribed(address indexed farmer, uint256 indexed policyId, uint256 season);
 
     /// @notice Emitted when payout is triggered for a policy.
     event PayoutTriggered(uint256 indexed policyId);
 
-    /// @notice Emitted when a policy status is changed (paused or resumed).
+    /// @notice Emitted when a policy status is changed (paused, resumed, payout).
     event PolicyStatusChanged(uint256 indexed policyId, PolicyStatus newStatus);
 
     /// @notice Restricts function access to the contract owner.
@@ -107,17 +110,30 @@ contract PolicyManager {
         nextPolicyId++;
     }
 
-    /// @notice Allows a user to subscribe to an active policy by paying the exact premium.
-    /// @param _policyId The ID of the policy to subscribe to.
+    /// @notice Allows farmers to subscribe to a policy by paying the premium
+    /// @param _policyId ID of the policy to subscribe to
     function subscribe(uint256 _policyId) external payable validPolicy(_policyId) {
         Policy storage p = policies[_policyId];
-        require(p.status == PolicyStatus.Active, "Policy is not active");
-        require(msg.value == p.premium, "Incorrect premium amount");
 
+        require(p.status == PolicyStatus.Active, "Policy is not active");
+        require(block.timestamp <= p.subscriptionDeadline, "Subscription deadline passed");
+        require(msg.value == p.premium, "Incorrect premium amount");
+        require(p.lastSubscribedSeason[msg.sender] < p.season, "Already subscribed to this policy this season");
+
+        if (p.coversFullSeason) {
+            require(!farmerSeasonFullCover[msg.sender][p.season], "Already subscribed to another policy this season");
+            farmerSeasonFullCover[msg.sender][p.season] = true;
+        } else {
+            require(!farmerSeasonFullCover[msg.sender][p.season], "Cannot subscribe to sub-policy after full-season");
+        }
+
+        p.lastSubscribedSeason[msg.sender] = p.season;
         p.currentSubscribers.push(msg.sender);
         farmerPolicies[msg.sender].push(_policyId);
 
-        emit Subscribed(msg.sender, _policyId);
+        ITreasury(treasury).deposit{value: msg.value}(msg.sender);
+
+        emit Subscribed(msg.sender, _policyId, p.season);
     }
 
     /// @notice Marks a policy for payout (called by payout engine)
