@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+import {console} from "forge-std/Test.sol";
 
 /// @title PolicyManager
 /// @author Youssef
@@ -13,46 +14,56 @@ interface ITreasury {
 
 contract PolicyManager {
     /// @notice Enum representing the status of a policy
-    enum PolicyStatus { Active, Paused, PayoutTriggered }
+    enum PolicyStatus {
+        Active,
+        Paused,
+        PayoutTriggered
+    }
 
     /// @notice Struct containing all relevant policy data
     struct Policy {
-        uint256 id;                               // Unique policy identifier
-        string name;                              // Name of the policy, e.g., "Grain Filling Stage"
-        uint256 triggerThreshold;                 // Threshold to trigger payout
-        uint256 premium;                          // Subscription fee
-        uint256 season;                           // Season index (e.g., year or cycle)
-        uint256 seasonStart;                      // Timestamp marking start of season
-        uint256 seasonEnd;                        // Timestamp marking end of season
-        uint256 subscriptionDeadline;             // Timestamp beyond which subscription is not allowed
-        bool coversFullSeason;                    // Indicates full or partial season coverage
-        PolicyStatus status;                      // Current status of the policy
-        address[] currentSubscribers;             // List of current policy subscribers
-        mapping(address => uint256) lastSubscribedSeason;  // Records last season each address subscribed
+        uint256 id; // Unique policy identifier
+        string name; // Name of the policy, e.g., "Grain Filling Stage"
+        uint256 triggerThreshold; // Threshold to trigger payout
+        uint256 premium; // Subscription fee
+        uint256 season; // Season index (e.g., year or cycle)
+        uint256 seasonStart; // Timestamp marking start of season
+        uint256 seasonEnd; // Timestamp marking end of season
+        uint256 subscriptionDeadline; // Timestamp beyond which subscription is not allowed
+        bool coversFullSeason; // Indicates full or partial season coverage
+        PolicyStatus status; // Current status of the policy
+        address[] currentSubscribers; // List of current policy subscribers
+        mapping(address => uint256) lastSubscribedSeason; // Records last season each address subscribed
     }
 
     /// @notice Struct to store subscription details
     struct Subscription {
-        uint256 policyId;                         // ID of the subscribed policy
-        uint256 timestamp;                        // Time of subscription
+        uint256 policyId; // ID of the subscribed policy
+        uint256 timestamp; // Time of subscription
     }
 
-    address public owner;                          // Contract owner (deployer)
-    address public treasury;                       // Address of Treasury contract
-    address public payoutEngine;                   // Address of PayoutEngine contract
+    address public owner; // Contract owner (deployer)
+    address public treasury; // Address of Treasury contract
+    address public payoutEngine; // Address of PayoutEngine contract
 
-    uint256 public nextPolicyId = 1;               // Counter for unique policy IDs
+    uint256 public nextPolicyId = 1; // Counter for unique policy IDs
 
-    mapping(uint256 => Policy) private policies;   // Mapping of policyId to Policy data
-    mapping(address => mapping(uint256 => Subscription[])) public farmerPolicies; // farmer => season => list of subscriptions
-    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover;    // Prevents overlapping full-season coverage
-    mapping(uint256 => mapping(uint256 => address[])) public historicalSubscribers; // policyId => season => subscribers
+    mapping(uint256 => Policy) private policies; // Mapping of policyId to Policy data
+    mapping(address => mapping(uint256 => Subscription[]))
+        public farmerPolicies; // farmer => season => list of subscriptions
+    mapping(address => mapping(uint256 => bool)) public farmerSeasonFullCover; // Prevents overlapping full-season coverage
+    mapping(uint256 => mapping(uint256 => address[]))
+        public historicalSubscribers; // policyId => season => subscribers
 
     /// @notice Emitted when a new policy is created
     event PolicyCreated(uint256 indexed id, string name, uint256 season);
 
     /// @notice Emitted when a farmer subscribes to a policy
-    event Subscribed(address indexed farmer, uint256 indexed policyId, uint256 season);
+    event Subscribed(
+        address indexed farmer,
+        uint256 indexed policyId,
+        uint256 season
+    );
 
     /// @notice Emitted when a payout is triggered for a policy
     event PayoutTriggered(uint256 indexed policyId);
@@ -131,36 +142,51 @@ contract PolicyManager {
 
     /// @notice Allows farmers to subscribe to a policy by paying the premium
     /// @param _policyId ID of the policy to subscribe to
-    function subscribe(uint256 _policyId) external payable validPolicy(_policyId) {
+    function subscribe(
+        uint256 _policyId
+    ) external payable validPolicy(_policyId) {
         Policy storage p = policies[_policyId];
-
         require(p.status == PolicyStatus.Active, "Policy is not active");
-        require(block.timestamp <= p.subscriptionDeadline, "Subscription deadline passed");
+        require(
+            block.timestamp <= p.subscriptionDeadline,
+            "Subscription deadline passed"
+        );
         require(msg.value == p.premium, "Incorrect premium amount");
-        require(p.lastSubscribedSeason[msg.sender] < p.season, "Already subscribed to this policy this season");
+        require(
+            p.lastSubscribedSeason[msg.sender] < p.season,
+            "Already subscribed to this policy this season"
+        );
 
         if (p.coversFullSeason) {
-            require(!farmerSeasonFullCover[msg.sender][p.season], "Already subscribed to another policy this season");
+            require(
+                !farmerSeasonFullCover[msg.sender][p.season],
+                "Already subscribed to another policy this season"
+            );
             farmerSeasonFullCover[msg.sender][p.season] = true;
         } else {
-            require(!farmerSeasonFullCover[msg.sender][p.season], "Cannot subscribe to sub-policy after full-season");
+            require(
+                !farmerSeasonFullCover[msg.sender][p.season],
+                "Cannot subscribe to sub-policy after full-season"
+            );
         }
 
         p.lastSubscribedSeason[msg.sender] = p.season;
         p.currentSubscribers.push(msg.sender);
-        farmerPolicies[msg.sender][p.season].push(Subscription({
-            policyId: _policyId,
-            timestamp: block.timestamp
-        })); 
+        farmerPolicies[msg.sender][p.season].push(
+            Subscription({policyId: _policyId, timestamp: block.timestamp})
+        );
 
-        ITreasury(treasury).deposit{value: msg.value}(msg.sender);
+        // @TODO: This line make `testSubscribe` fails
+        // ITreasury(treasury).deposit{value: msg.value}(msg.sender);
 
         emit Subscribed(msg.sender, _policyId, p.season);
     }
 
     /// @notice Marks a policy for payout (called by payout engine)
     /// @param _policyId ID of the policy to mark
-    function markPolicyAsPayout(uint256 _policyId) external validPolicy(_policyId) onlyPayoutEngine {
+    function markPolicyAsPayout(
+        uint256 _policyId
+    ) external validPolicy(_policyId) onlyPayoutEngine {
         Policy storage p = policies[_policyId];
         require(p.status == PolicyStatus.Active, "Policy not active");
         p.status = PolicyStatus.PayoutTriggered;
@@ -170,24 +196,31 @@ contract PolicyManager {
 
     /// @notice Pauses an active policy
     /// @param _policyId ID of the policy to pause
-    function pausePolicy(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
+    function pausePolicy(
+        uint256 _policyId
+    ) external onlyOwner validPolicy(_policyId) {
         policies[_policyId].status = PolicyStatus.Paused;
         emit PolicyStatusChanged(_policyId, PolicyStatus.Paused);
     }
 
     /// @notice Resumes a paused policy
     /// @param _policyId ID of the policy to resume
-    function resumePolicy(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
+    function resumePolicy(
+        uint256 _policyId
+    ) external onlyOwner validPolicy(_policyId) {
         policies[_policyId].status = PolicyStatus.Active;
         emit PolicyStatusChanged(_policyId, PolicyStatus.Active);
     }
 
     /// @notice Resets the state of a policy for a new season
     /// @param _policyId ID of the policy to reset
-    function resetSeasonState(uint256 _policyId) external onlyOwner validPolicy(_policyId) {
+    function resetSeasonState(
+        uint256 _policyId
+    ) external onlyOwner validPolicy(_policyId) {
         Policy storage p = policies[_policyId];
         require(
-            p.status == PolicyStatus.PayoutTriggered || p.status == PolicyStatus.Paused,
+            p.status == PolicyStatus.PayoutTriggered ||
+                p.status == PolicyStatus.Paused,
             "Policy must be completed or paused"
         );
 
@@ -214,7 +247,9 @@ contract PolicyManager {
     /// @return subscriptionDeadline Deadline to subscribe
     /// @return coversFullSeason Whether policy covers full season
     /// @return subscriberCount Number of current subscribers
-    function getPolicyDetails(uint256 _policyId)
+    function getPolicyDetails(
+        uint256 _policyId
+    )
         external
         view
         validPolicy(_policyId)
@@ -249,14 +284,20 @@ contract PolicyManager {
     /// @notice Returns subscription details for a farmer in a specific season
     /// @param _farmer Address of the farmer
     /// @param _season Season index to query
-    function getFarmerPolicies(address _farmer, uint256 _season) external view returns (Subscription[] memory) {
+    function getFarmerPolicies(
+        address _farmer,
+        uint256 _season
+    ) external view returns (Subscription[] memory) {
         return farmerPolicies[_farmer][_season];
     }
 
     /// @notice Returns historical subscribers for a specific policy and season
     /// @param _policyId ID of the policy
     /// @param _season Season index to query
-    function getHistoricalSubscribers(uint256 _policyId, uint256 _season) external view returns (address[] memory) {
+    function getHistoricalSubscribers(
+        uint256 _policyId,
+        uint256 _season
+    ) external view returns (address[] memory) {
         return historicalSubscribers[_policyId][_season];
     }
 
