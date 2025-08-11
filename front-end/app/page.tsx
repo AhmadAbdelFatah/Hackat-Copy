@@ -1,41 +1,15 @@
+'use client'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import  Header  from "@/components/common/Header"
 import { Shield, CloudRain, Users, TrendingUp, CheckCircle, Globe } from "lucide-react"
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">RainSure</h1>
-              <p className="text-xs text-gray-600">Blockchain Insurance</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              English
-            </Button>
-            <Link href="/farmer">
-              <Button variant="outline" size="sm">
-                Farmer Login
-              </Button>
-            </Link>
-            <Link href="/admin">
-              <Button variant="outline" size="sm">
-                Admin
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto text-center max-w-4xl">
