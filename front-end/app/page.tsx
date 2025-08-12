@@ -2,8 +2,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import  Header  from "@/components/common/Header"
 import { Shield, CloudRain, Users, TrendingUp, CheckCircle, Globe } from "lucide-react"
+import Header from "@/components/common/Header"
 
 export default function LandingPage() {
   return (
