@@ -1,4 +1,4 @@
-import { AdminHeader } from "./admin-header"
+import { Header } from "@radix-ui/react-accordion"
 import { AdminSidebar } from "./admin-sidebar"
 
 interface AdminLayoutProps {
@@ -8,7 +8,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50">
-      <AdminHeader />
+      <Header/>
       <div className="flex">
         <AdminSidebar />
         <main className="flex-1 p-8">
