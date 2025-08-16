@@ -2,7 +2,9 @@
 import {usePathname} from 'next/navigation';
 import { Badge } from "@/components/ui/badge"
 import { Shield } from 'lucide-react'
+import { useRoleRedirect } from '@/hooks/useRoleRedirect';
 function Header(){
+  useRoleRedirect();
     const pathname = usePathname(); 
     let formattedName;
         if (pathname.startsWith('/farmer')) {
