@@ -4,21 +4,70 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { CloudRain, Shield, FileText, TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { CloudRain, Shield, FileText, TrendingUp, AlertTriangle, CheckCircle, Clock,MapPin } from "lucide-react"
 import FarmerHeader from "./sharedComponents/FarmerHeader"
-
+import {useEffect, useState} from 'react';
+import FarmerMap from "./map/page";
+import Modal from "@/components/common/Modal";
 export default function FarmerOverview() {
-  
+const[isModalOpen, setIsModalOpen] = useState<boolean>(false);
+const[farmAddress, setFarmAddress] = useState<string>("");
+const openModal = ()=> setIsModalOpen(true);
+const closeModal = ()=> setIsModalOpen(false);
+const handleAddressSelect = (newAddress: string)=>{
+  setFarmAddress(newAddress);
+}
+const STORAGE_KEY = "farmerData";
+useEffect(()=>{
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if(saved){
+    const parsed = JSON.parse(saved);
+    setFarmAddress(parsed.farmerAddress);
+  }
+},[farmAddress])
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-teal-50">
       {/* Header */}
       <FarmerHeader/>
-
+                
+ 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John Banda</h1>
-          <p className="text-gray-600">Farm ID: MW-001-2024 | Location: Lilongwe District</p>
+          <p className="text-gray-600">Farm ID: MW-001-2024 | {farmAddress}</p>
+          <Modal isOpen = {isModalOpen} onClose = {closeModal} ><FarmerMap onAddressSelect={handleAddressSelect}/></Modal>
+          <button 
+  onClick={openModal}
+  className="
+    bg-transparent
+    border-2 
+    border-green-500
+    text-green-500
+    font-semibold
+    px-3
+    py-2
+    rounded-full
+    transition-all 
+    duration-300
+    hover:bg-green-500 
+    hover:text-gray-900
+    hover:shadow-lg
+    hover:shadow-green-300/50
+    shadow-md
+    shadow-green-300/30
+    flex
+    items-center
+    gap-2
+    hover:scale-105
+  "
+  style={{
+    boxShadow: '0 0 20px rgba(34, 197, 94, 0.3)'
+  }}
+>
+  <MapPin/>
+  Find Location
+</button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
