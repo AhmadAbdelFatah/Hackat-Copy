@@ -1,10 +1,14 @@
+'use client'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AdminLayout } from "@/components/admin/admin-layout"
 import { Users, Shield, Clock, DollarSign, CheckCircle, Eye, Check, X } from "lucide-react"
-
+import { policyManagerConfig } from '@/lib/policyManagmentConfig'
+import {useReadContract, useWriteContract} from 'wagmi'
+import { useRoleRedirect } from "@/hooks/useRoleRedirect"
+// import config from '@/config' 
 const pendingSubscriptions = [
   {
     id: "SUB-2024-015",
@@ -63,6 +67,17 @@ const recentPayouts = [
 ]
 
 export default function AdminDashboard() {
+  useRoleRedirect();
+  
+ const {data:numberOfPolicies} = useReadContract({
+  ...policyManagerConfig,
+  functionName: 'nextPolicyId',
+
+ })
+ const{data: totalUniqueSubscribers} = useReadContract({
+  ...policyManagerConfig,
+  functionName: 'totalUniqueSubscribers',
+ })
   return (
     <AdminLayout>
       <div className="mb-8">
@@ -80,7 +95,7 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold mb-2">127</div>
+            <div className="text-3xl font-bold mb-2">                                                                                                                                               127</div>
             <p className="text-emerald-100">+12 this month</p>
           </CardContent>
         </Card>
@@ -90,10 +105,10 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Active Policies</CardTitle>
               <Shield className="w-6 h-6" />
-            </div>
-          </CardHeader>
+            </div>                                                                                                   
+          </CardHeader>                                                           
           <CardContent>
-            <div className="text-3xl font-bold mb-2">284</div>
+            <div className="text-3xl font-bold mb-2">{Number(numberOfPolicies) - 1}</div>
             <p className="text-blue-100">Across all farmers</p>
           </CardContent>
         </Card>
