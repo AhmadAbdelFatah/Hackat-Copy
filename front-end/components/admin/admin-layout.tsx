@@ -1,5 +1,6 @@
-import { Header } from "@radix-ui/react-accordion"
+
 import { AdminSidebar } from "./admin-sidebar"
+import Header from '../common/Header' 
 
 interface AdminLayoutProps {
   children: React.ReactNode
