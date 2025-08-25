@@ -17,7 +17,8 @@ contract PolicyManager {
     enum PolicyStatus {
         Active,
         Paused,
-        PayoutTriggered
+        PayoutTriggered,
+        Hidden
     }
 
     /// @notice Struct containing all relevant policy data
@@ -303,4 +304,11 @@ contract PolicyManager {
 
     /// @notice Fallback function to receive plain ETH transfers
     receive() external payable {}
+
+    /// @notice Hides a policy (it will not appear in UI if frontend filters by status)
+    function hidePolicy(uint256 _policyId) external onlyOwner validPolicy(_policyId){
+        policies[_policyId].status = PolicyStatus.Hidden;
+        emit PolicyStatusChanged(_policyId, PolicyStatus.Hidden);
+    }
+
 }

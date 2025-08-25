@@ -24,7 +24,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { policyManagerConfig } from "@/lib/policyManagmentConfig";
 import FarmerHeader from "../sharedComponents/FarmerHeader";
-import { useReadContract } from "wagmi";
+import { useReadContract, useWriteContract } from "wagmi";
 import { readContract } from "@wagmi/core";
 import {config} from "@/config/index";
 
@@ -45,24 +45,29 @@ type Policy = {
 
 // Helper function to format BigInt to USD
 const formatUSD = (value: bigint) => {
-  return `$${(Number(value) / 100).toFixed(2)}`;
+  return `$${(Number(value)).toFixed(2)}`;
 };
 
 // Helper function to format duration (assuming duration is in days)
-const formatDuration = (days: bigint) => {
-  const weeks = Number(days) / 7;
+const formatDuration = (start: bigint, end: bigint) => {
+  const diffMs = (Number(end) - Number(start)) * 1000;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const weeks = Math.floor(days / 7);
+
   if (weeks >= 4) {
-    const months = weeks / 4;
-    return `${months.toFixed(1)} month${months !== 1 ? "s" : ""}`;
+    const months = Math.floor(weeks / 4);
+    return `${months} month${months !== 1 ? "s" : ""}`;
   }
-  return `${weeks.toFixed(0)} week${weeks !== 1 ? "s" : ""}`;
+
+  return `${weeks} week${weeks !== 1 ? "s" : ""}`;
 };
+
+
 
 // Helper function to format date (assuming timestamp is in seconds)
 const formatDate = (timestamp: bigint) => {
   return new Date(Number(timestamp) * 1000).toLocaleDateString();
 };
-
 export default function PoliciesPage() {
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,6 +123,10 @@ export default function PoliciesPage() {
       fetchPolicies();
     }
   }, [nextId, fetchPolicyDetails]);
+
+  const onSubscribtionHandler = (id: bigint)=>{
+
+  }
 
   if (isLoading) {
     return (
@@ -194,7 +203,7 @@ export default function PoliciesPage() {
 
         {/* Policy Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {policies.map((policy) => (
+          {policies.filter((policy)=> Number(policy.data[3]) !== 3).map((policy) => (
             <Card
               key={policy.id.toString()}
               className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 ${
@@ -282,7 +291,7 @@ export default function PoliciesPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Duration:</span>
                     <span className="font-medium">
-                      {formatDuration(policy.data[3])}
+                      {formatDuration(policy.data[5], policy.data[6])}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -345,30 +354,15 @@ export default function PoliciesPage() {
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">
-                                  Premium (2.5 hectares):
+                                  Premium: {formatUSD(policy.data[2])} per hectare
                                 </span>
-                                {/* <span className="font-medium">
-                                  {formatUSD(
-                                    BigInt(Number(policy.data[2]) * 25n)
-                                  )}
-                                </span> */}
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-gray-600">
-                                  Coverage (2.5 hectares):
-                                </span>
-                                {/* <span className="font-medium">
-                                  {formatUSD(
-                                    BigInt(Number(policy.data[1]) * 25n)
-                                  )}
-                                </span> */}
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Duration:</span>
-                                <span className="font-medium">
-                                  {formatDuration(policy.data[3])}
+                                  Coverage: {formatUSD(policy.data[1])} per hectare
                                 </span>
                               </div>
+                                <span className="text-gray-600">Duration: {formatDuration(policy.data[5], policy.data[6])} </span>
                             </div>
                           </div>
 
@@ -394,7 +388,7 @@ export default function PoliciesPage() {
                                 Cancel
                               </Button>
                             </DialogTrigger>
-                            <Button className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700">
+                            <Button className="flex-1 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700" onClick = {onSubscribtionHandler}>
                               Confirm Subscription
                             </Button>
                           </div>

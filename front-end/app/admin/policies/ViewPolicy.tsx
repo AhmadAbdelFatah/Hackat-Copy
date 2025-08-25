@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useReadContract } from "wagmi";
+import { useReadContract, useWriteContract } from "wagmi";
 import { policyManagerConfig } from "@/lib/policyManagmentConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export default function ViewAllPolicies() {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const {writeContract} = useWriteContract();
 
   const {
     data: nextId,
@@ -87,7 +88,14 @@ export default function ViewAllPolicies() {
   const validatePolicy = ()=>{
     const currectTimeStamp = Math.floor(Date.now() / 1000);
   }
-  console.log(validatePolicy())
+
+const onHideHandler = (id: bigint)=>{
+  writeContract({
+    ...policyManagerConfig,
+    functionName: "hidePolicy",
+    args:[id]
+  })
+}
   if (isPending || loading) return <p>Loading policies...</p>;
   if (error || idError)
     return <p className="text-red-600">Error: {error || idError?.message}</p>;
@@ -124,14 +132,13 @@ export default function ViewAllPolicies() {
                 <strong>Deadline:</strong>{" "}
                 {new Date(Number(policy[7]) * 1000).toLocaleString()}
               </p>
-             <p className="col-span-2 flex items-center space-x-2">
+             <p className="">
   {(() => {
     const status = Number(policy[3]); // enum from contract
     const deadline = Number(policy[7]); // subscriptionDeadline
     const now = Math.floor(Date.now() / 1000);
     const isDeadlineOver = now > deadline;
     const isActiveByContract = status === 0;
-
     // Final computed logic
     const shouldShowActive = isActiveByContract && !isDeadlineOver;
 
@@ -158,6 +165,10 @@ export default function ViewAllPolicies() {
     }
   })()}
 </p>
+<button className=" w-fit px-4  rounded-lg bg-red-600 text-white font-medium 
+             hover:bg-red-700 focus:outline-none focus:ring-2 
+             focus:ring-red-500 focus:ring-offset-2 
+             transition-all duration-200" onClick={()=>{onHideHandler(id)}}>Hide</button>
             </div>
           </CardContent>
         </Card>
