@@ -177,8 +177,7 @@ contract PolicyManager {
             Subscription({policyId: _policyId, timestamp: block.timestamp})
         );
 
-        // @TODO: This line make `testSubscribe` fails
-        // ITreasury(treasury).deposit{value: msg.value}(msg.sender);
+        ITreasury(treasury).deposit{value: msg.value}(msg.sender);
 
         emit Subscribed(msg.sender, _policyId, p.season);
     }
