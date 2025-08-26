@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle } from "lucide-react";
 import {config} from "@/config/index";
-import { readContract } from "@wagmi/core";
+import { readContract, waitForTransactionReceipt } from "@wagmi/core";
 
 type Policy = {
   id: bigint;
@@ -31,6 +31,8 @@ export default function ViewAllPolicies() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const {writeContract} = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
+
 
   const {
     data: nextId,
@@ -85,17 +87,32 @@ export default function ViewAllPolicies() {
     }
   }, [nextId, fetchPolicyDetails]);
 
-  const validatePolicy = ()=>{
-    const currectTimeStamp = Math.floor(Date.now() / 1000);
-  }
 
-const onHideHandler = (id: bigint)=>{
-  writeContract({
-    ...policyManagerConfig,
-    functionName: "hidePolicy",
-    args:[id]
-  })
-}
+const onToggleHandler = async (id: bigint, status: number) => {
+  try {
+    const fnName = status === 3 ? "resumePolicy" : "hidePolicy";
+    const hash = await writeContractAsync({
+      ...policyManagerConfig,
+      functionName: fnName,
+      args: [id],
+    });
+
+    // ⏳ Wait until the tx is mined
+    await waitForTransactionReceipt(config, { hash });
+
+    // ✅ Now refetch the *updated* policy
+    const updated = await fetchPolicyDetails(id);
+    setPolicies((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, data: updated as Policy["data"] } : p
+      )
+    );
+  } catch (err) {
+    console.error("Toggle failed", err);
+  }
+};
+
+
   if (isPending || loading) return <p>Loading policies...</p>;
   if (error || idError)
     return <p className="text-red-600">Error: {error || idError?.message}</p>;
@@ -165,10 +182,17 @@ const onHideHandler = (id: bigint)=>{
     }
   })()}
 </p>
-<button className=" w-fit px-4  rounded-lg bg-red-600 text-white font-medium 
+<button
+  className="w-fit px-4 rounded-lg bg-red-600 text-white font-medium 
              hover:bg-red-700 focus:outline-none focus:ring-2 
              focus:ring-red-500 focus:ring-offset-2 
-             transition-all duration-200" onClick={()=>{onHideHandler(id)}}>Hide</button>
+             transition-all duration-200"
+  onClick={() => onToggleHandler(id, Number(policy[3]))} 
+  disabled={Number(policy[3]) === 1 || Number(policy[3]) === 2}
+>
+  {Number(policy[3]) === 3 ? "Unhide" : "Hide"} 
+</button>
+
             </div>
           </CardContent>
         </Card>
