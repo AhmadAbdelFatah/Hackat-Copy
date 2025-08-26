@@ -1,4 +1,3 @@
-// front-end/lib/policyManagerConfig.ts
 import PolicyManagerABIJson from './PolicyManagerABI.json';
 import type { Abi } from 'viem';
 

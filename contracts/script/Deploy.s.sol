@@ -8,14 +8,11 @@ import "../src/Treasury.sol";
 contract Deploy is Script {
     function run() external {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        
         vm.startBroadcast(privateKey);
-        
+
         Treasury treasury = new Treasury();
         PolicyManager policy = new PolicyManager(address(treasury));
-        
-        console2.log("Treasury deployed at:", address(treasury));
-        console2.log("PolicyManager deployed at:", address(policy));
+        treasury.setManager(address (policy), true);
         
         vm.stopBroadcast();
     }
